@@ -32,6 +32,10 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", authHandler.Register)
 	mux.HandleFunc("POST /login", authHandler.Login)
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
 	// 3. Start Server
 	port := os.Getenv("PORT")

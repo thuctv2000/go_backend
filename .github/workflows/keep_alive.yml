@@ -11,6 +11,6 @@ jobs:
     steps:
       - name: Ping Render Backend
         run: |
-          curl -I https://go-backend-zqxl.onrender.com
+          curl https://go-backend-zqxl.onrender.com/health
         env:
           CI: true
