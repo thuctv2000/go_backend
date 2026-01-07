@@ -3,27 +3,47 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
+	"my_backend/internal/database"
 	"my_backend/internal/handler"
 	"my_backend/internal/repository"
 	"my_backend/internal/service"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	// 1. Init Dependencies
-	// In a real app, you would load these from config/env
-	jwtSecret := "my_secret_key"
+	// Load .env file (ignore error if not found - production uses env vars)
+	_ = godotenv.Load()
 
-	userRepo := repository.NewMemoryUserRepository()
+	// 1. Connect to Database
+	if err := database.Connect(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+	// 2. Run Migrations
+	if err := database.RunMigrations(); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// 3. Init Dependencies
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "my_secret_key" // fallback for development
+	}
+
+	userRepo := repository.NewPostgresUserRepository()
 	authService := service.NewAuthService(userRepo, jwtSecret)
 	authHandler := handler.NewAuthHandler(authService)
 
-	// Seed Admin User
+	// Seed Admin User (ignore error if already exists)
 	_, err := authService.Register(context.Background(), "admin", "12345678@X")
 	if err != nil {
-		fmt.Printf("Error seeding admin user: %v\n", err)
+		fmt.Printf("Admin user already exists or error: %v\n", err)
 	} else {
 		fmt.Println("Admin user created: admin / 12345678@X")
 	}
