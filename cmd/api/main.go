@@ -40,6 +40,11 @@ func main() {
 	authService := service.NewAuthService(userRepo, jwtSecret)
 	authHandler := handler.NewAuthHandler(authService)
 
+	// Init Lixi Dependencies
+	lixiRepo := repository.NewPostgresLixiRepository()
+	lixiService := service.NewLixiService(lixiRepo)
+	lixiHandler := handler.NewLixiHandler(lixiService)
+
 	// Seed Admin User (ignore error if already exists)
 	_, err := authService.Register(context.Background(), "admin", "12345678@X")
 	if err != nil {
@@ -61,6 +66,16 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Welcome to My Backend API"))
 	})
+
+	// Lixi Routes - Public
+	mux.HandleFunc("GET /api/lixi/active", lixiHandler.GetActive)
+
+	// Lixi Routes - Admin
+	mux.HandleFunc("GET /api/admin/lixi", lixiHandler.GetAll)
+	mux.HandleFunc("POST /api/admin/lixi", lixiHandler.Create)
+	mux.HandleFunc("PUT /api/admin/lixi/{id}", lixiHandler.Update)
+	mux.HandleFunc("DELETE /api/admin/lixi/{id}", lixiHandler.Delete)
+	mux.HandleFunc("POST /api/admin/lixi/{id}/activate", lixiHandler.Activate)
 
 	// 3. Start Server
 	port := os.Getenv("PORT")
