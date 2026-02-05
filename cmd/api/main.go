@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"my_backend/internal/database"
 	"my_backend/internal/handler"
@@ -33,7 +34,11 @@ func main() {
 	// 3. Init Dependencies
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "my_secret_key" // fallback for development
+		if os.Getenv("ENV") == "production" {
+			log.Fatal("JWT_SECRET environment variable is required in production")
+		}
+		log.Println("⚠️  WARNING: Using default JWT_SECRET for development only")
+		jwtSecret = "my_secret_key"
 	}
 
 	userRepo := repository.NewPostgresUserRepository()
@@ -94,8 +99,22 @@ func main() {
 }
 
 func enableCORS(next http.Handler) http.Handler {
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		if os.Getenv("ENV") == "production" {
+			log.Fatal("ALLOWED_ORIGINS must be set in production")
+		}
+		allowedOrigins = "http://localhost:3000,http://localhost:5000"
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		for _, allowed := range strings.Split(allowedOrigins, ",") {
+			if origin == strings.TrimSpace(allowed) {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		if r.Method == "OPTIONS" {

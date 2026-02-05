@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"my_backend/internal/domain"
 
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type authService struct {
@@ -23,12 +25,15 @@ func NewAuthService(userRepo domain.UserRepository, jwtSecret string) domain.Aut
 }
 
 func (s *authService) Register(ctx context.Context, email, password string) (*domain.User, error) {
-	// In production, you MUST hash the password here (e.g. using bcrypt).
-	// For this example, we store it as plain text (Do NOT do this in real apps).
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
 	user := &domain.User{
 		ID:       time.Now().String(), // Simple ID generation
 		Email:    email,
-		Password: password,
+		Password: string(hashedPassword),
 	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
@@ -44,7 +49,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (*domai
 		return nil, "", errors.New("invalid credentials")
 	}
 
-	if user.Password != password {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, "", errors.New("invalid credentials")
 	}
 
