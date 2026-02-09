@@ -34,6 +34,9 @@ func (s *lixiService) CreateConfig(ctx context.Context, name string, envelopes [
 		if env.Message == "" {
 			return nil, errors.New("message is required for all envelopes")
 		}
+		if env.Rate <= 0 {
+			return nil, errors.New("rate must be greater than 0 for all envelopes")
+		}
 		// Set ID based on position (1-12)
 		envelopes[i].ID = i + 1
 	}
@@ -87,6 +90,9 @@ func (s *lixiService) UpdateConfig(ctx context.Context, id string, name string, 
 			}
 			if env.Message == "" {
 				return nil, errors.New("message is required for all envelopes")
+			}
+			if env.Rate <= 0 {
+				return nil, errors.New("rate must be greater than 0 for all envelopes")
 			}
 			// Set ID based on position (1-12)
 			envelopes[i].ID = i + 1

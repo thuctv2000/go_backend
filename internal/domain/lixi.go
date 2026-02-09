@@ -6,9 +6,10 @@ import (
 )
 
 type LixiEnvelope struct {
-	ID      int    `json:"id"`
-	Amount  string `json:"amount"`  // "100K VNĐ", "1 Triệu VNĐ"
-	Message string `json:"message"` // "Phát Tài Phát Lộc!"
+	ID      int     `json:"id"`
+	Amount  string  `json:"amount"`  // "100K VNĐ", "1 Triệu VNĐ"
+	Message string  `json:"message"` // "Phát Tài Phát Lộc!"
+	Rate    float64 `json:"rate"`    // Probability weight (e.g., 0.5 = 50% chance)
 }
 
 type LixiConfig struct {
