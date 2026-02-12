@@ -37,4 +37,20 @@ type LixiService interface {
 	UpdateConfig(ctx context.Context, id string, name string, envelopes []LixiEnvelope) (*LixiConfig, error)
 	DeleteConfig(ctx context.Context, id string) error
 	SetActiveConfig(ctx context.Context, id string) error
+	SubmitGreeting(ctx context.Context, name, amount, message, image string) (*LixiGreeting, error)
+	GetAllGreetings(ctx context.Context) ([]*LixiGreeting, error)
+}
+
+type LixiGreeting struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Amount    string    `json:"amount"`
+	Message   string    `json:"message"`
+	Image     string    `json:"image"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type LixiGreetingRepository interface {
+	Create(ctx context.Context, greeting *LixiGreeting) error
+	GetAll(ctx context.Context) ([]*LixiGreeting, error)
 }

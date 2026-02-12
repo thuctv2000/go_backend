@@ -52,6 +52,23 @@ func RunMigrations() error {
 		return fmt.Errorf("failed to create lixi active index: %w", err)
 	}
 
+	// Create lixi_greetings table
+	createLixiGreetingsTable := `
+	CREATE TABLE IF NOT EXISTS lixi_greetings (
+		id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+		name TEXT NOT NULL DEFAULT '',
+		amount TEXT NOT NULL,
+		message TEXT NOT NULL,
+		image TEXT NOT NULL,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+	);
+	`
+
+	_, err = DB.Exec(ctx, createLixiGreetingsTable)
+	if err != nil {
+		return fmt.Errorf("failed to create lixi_greetings table: %w", err)
+	}
+
 	fmt.Println("✅ Database migrations completed successfully!")
 	return nil
 }

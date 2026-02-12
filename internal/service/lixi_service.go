@@ -8,12 +8,14 @@ import (
 )
 
 type lixiService struct {
-	lixiRepo domain.LixiRepository
+	lixiRepo     domain.LixiRepository
+	greetingRepo domain.LixiGreetingRepository
 }
 
-func NewLixiService(lixiRepo domain.LixiRepository) domain.LixiService {
+func NewLixiService(lixiRepo domain.LixiRepository, greetingRepo domain.LixiGreetingRepository) domain.LixiService {
 	return &lixiService{
-		lixiRepo: lixiRepo,
+		lixiRepo:     lixiRepo,
+		greetingRepo: greetingRepo,
 	}
 }
 
@@ -137,4 +139,36 @@ func (s *lixiService) SetActiveConfig(ctx context.Context, id string) error {
 	}
 
 	return s.lixiRepo.SetActive(ctx, id)
+}
+
+func (s *lixiService) SubmitGreeting(ctx context.Context, name, amount, message, image string) (*domain.LixiGreeting, error) {
+	if name == "" {
+		return nil, errors.New("name is required")
+	}
+	if amount == "" {
+		return nil, errors.New("amount is required")
+	}
+	if message == "" {
+		return nil, errors.New("message is required")
+	}
+	if image == "" {
+		return nil, errors.New("image is required")
+	}
+
+	greeting := &domain.LixiGreeting{
+		Name:    name,
+		Amount:  amount,
+		Message: message,
+		Image:   image,
+	}
+
+	if err := s.greetingRepo.Create(ctx, greeting); err != nil {
+		return nil, err
+	}
+
+	return greeting, nil
+}
+
+func (s *lixiService) GetAllGreetings(ctx context.Context) ([]*domain.LixiGreeting, error) {
+	return s.greetingRepo.GetAll(ctx)
 }

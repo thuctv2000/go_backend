@@ -156,6 +156,48 @@ func (h *LixiHandler) Activate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Config activated successfully"})
 }
 
+type submitGreetingRequest struct {
+	Name    string `json:"name"`
+	Amount  string `json:"amount"`
+	Message string `json:"message"`
+	Image   string `json:"image"`
+}
+
+// SubmitGreeting saves a greeting with an uploaded image (public endpoint)
+func (h *LixiHandler) SubmitGreeting(w http.ResponseWriter, r *http.Request) {
+	var req submitGreetingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	greeting, err := h.lixiService.SubmitGreeting(r.Context(), req.Name, req.Amount, req.Message, req.Image)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(greeting)
+}
+
+// GetAllGreetings returns all greetings (admin endpoint)
+func (h *LixiHandler) GetAllGreetings(w http.ResponseWriter, r *http.Request) {
+	greetings, err := h.lixiService.GetAllGreetings(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if greetings == nil {
+		greetings = []*domain.LixiGreeting{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(greetings)
+}
+
 // Helper function to extract ID from path
 func extractIDFromPath(path, prefix string) string {
 	if !strings.HasPrefix(path, prefix) {

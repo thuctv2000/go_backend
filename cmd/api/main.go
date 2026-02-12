@@ -47,7 +47,8 @@ func main() {
 
 	// Init Lixi Dependencies
 	lixiRepo := repository.NewPostgresLixiRepository()
-	lixiService := service.NewLixiService(lixiRepo)
+	greetingRepo := repository.NewPostgresLixiGreetingRepository()
+	lixiService := service.NewLixiService(lixiRepo, greetingRepo)
 	lixiHandler := handler.NewLixiHandler(lixiService)
 
 	// Seed Admin User (ignore error if already exists)
@@ -74,6 +75,7 @@ func main() {
 
 	// Lixi Routes - Public
 	mux.HandleFunc("GET /api/lixi/active", lixiHandler.GetActive)
+	mux.HandleFunc("POST /api/lixi/greeting", lixiHandler.SubmitGreeting)
 
 	// Lixi Routes - Admin
 	mux.HandleFunc("GET /api/admin/lixi", lixiHandler.GetAll)
@@ -81,6 +83,7 @@ func main() {
 	mux.HandleFunc("PUT /api/admin/lixi/{id}", lixiHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/lixi/{id}", lixiHandler.Delete)
 	mux.HandleFunc("POST /api/admin/lixi/{id}/activate", lixiHandler.Activate)
+	mux.HandleFunc("GET /api/admin/lixi/greetings", lixiHandler.GetAllGreetings)
 
 	// 3. Start Server
 	port := os.Getenv("PORT")
